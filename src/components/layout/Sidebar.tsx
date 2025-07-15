@@ -131,3 +131,5 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
     </aside>
   )
 }
+// commented out analytics
+
