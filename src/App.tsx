@@ -73,7 +73,7 @@ import { AIAdvisor } from './components/ai/AIAdvisor'
 import { MpesaIntegration } from './components/mpesa/MpesaIntegration'
 import { BudgetSection } from './components/budgets/BudgetSection'
 import { GoalsSection } from './components/goals/GoalsSection'
-import { AnalyticsSection } from './components/analytics/AnalyticsSection'
+// import { AnalyticsSection } from './components/analytics/AnalyticsSection'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 
 function App() {
@@ -107,8 +107,8 @@ function App() {
         return <BudgetSection />
       case 'goals':
         return <GoalsSection />
-      case 'analytics':
-        return <AnalyticsSection />
+      // case 'analytics':
+      //   return <AnalyticsSection />
       case 'settings':
         return <SettingsPanel />
       case 'ai-advisor':
