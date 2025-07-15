@@ -1,9 +1,9 @@
-// File: src/components/budgets/Budgets.tsx
+// File: src/components/budgets/BudgetSection.tsx
 
 import React from 'react'
 import { Wallet, Calendar, BarChart2 } from 'lucide-react'
 
-const Budgets: React.FC = () => {
+export const BudgetSection: React.FC = () => {
   return (
     <div className="space-y-6 p-6">
       <div className="mb-8">
@@ -51,7 +51,3 @@ const Budgets: React.FC = () => {
     </div>
   )
 }
-
-export default Budgets
-
-// File renamed to match PascalCase naming: BudgetSection
