@@ -62,7 +62,7 @@ import {
   TrendingUp,
   Target,
   Settings,
-  BarChart3,
+  // BarChart3,
   PiggyBank,
   Smartphone,
   ChevronLeft,
@@ -83,7 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
     { id: 'budgets', label: 'Budgets', icon: PiggyBank },
     { id: 'goals', label: 'Financial Goals', icon: Target },
     { id: 'mpesa', label: 'M-Pesa Sync', icon: Smartphone },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+   // { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'ai-advisor', label: 'AI Advisor', icon: TrendingUp },
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
