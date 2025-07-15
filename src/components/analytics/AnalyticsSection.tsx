@@ -155,19 +155,14 @@ export const AnalyticsSection: React.FC = () => {
     fetchData()
   }, [user])
 
-  // Monthly expenses
   const monthlySpending = transactions
     .filter((t) => t.type === 'expense')
     .reduce((acc, t) => {
-      const date = new Date(t.date)
-      if (!isNaN(date.getTime())) {
-        const month = format(date, 'MMM yyyy')
-        acc[month] = (acc[month] || 0) + t.amount
-      }
+      const month = format(new Date(t.date), 'MMM yyyy')
+      acc[month] = (acc[month] || 0) + t.amount
       return acc
     }, {} as Record<string, number>)
 
-  // Category spending
   const categorySpending = transactions
     .filter((t) => t.type === 'expense')
     .reduce((acc, t) => {
@@ -175,21 +170,14 @@ export const AnalyticsSection: React.FC = () => {
       return acc
     }, {} as Record<string, number>)
 
-  const monthlyData = Object.entries(monthlySpending).map(([month, amount]) => ({
-    month,
-    amount,
-  }))
-
-  const categoryData = Object.entries(categorySpending).map(([name, value]) => ({
-    name,
-    value,
-  }))
+  const monthlyData = Object.entries(monthlySpending).map(([month, amount]) => ({ month, amount }))
+  const categoryData = Object.entries(categorySpending).map(([name, value]) => ({ name, value }))
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
 
-      {/* Monthly Spending Chart */}
+      {/* Monthly Expenses */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <h3 className="text-lg font-semibold mb-4 text-gray-800">Monthly Expenses</h3>
         {monthlyData.length === 0 ? (
@@ -207,7 +195,7 @@ export const AnalyticsSection: React.FC = () => {
         )}
       </div>
 
-      {/* Category Breakdown Chart */}
+      {/* Spending by Category */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <h3 className="text-lg font-semibold mb-4 text-gray-800">Spending by Category</h3>
         {categoryData.length === 0 ? (
@@ -236,4 +224,5 @@ export const AnalyticsSection: React.FC = () => {
     </div>
   )
 }
+
 
