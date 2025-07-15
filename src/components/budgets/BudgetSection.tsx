@@ -1,9 +1,11 @@
+// File: src/components/budgets/BudgetSection.tsx
+
 import React, { useEffect, useState } from 'react'
-import { Wallet, Calendar, BarChart2, Plus } from 'lucide-react'
+import { Wallet, Calendar, BarChart2, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 
-interface Budget {
+interface BudgetItem {
   id: string
   user_id: string
   category: string
@@ -12,12 +14,12 @@ interface Budget {
 
 export const BudgetSection: React.FC = () => {
   const { user } = useAuth()
-  const [budgets, setBudgets] = useState<Budget[]>([])
+  const [budgets, setBudgets] = useState<BudgetItem[]>([])
   const [newCategory, setNewCategory] = useState('')
   const [newAmount, setNewAmount] = useState('')
 
   useEffect(() => {
-    if (user) fetchBudgets()
+    if (user?.id) fetchBudgets()
   }, [user])
 
   const fetchBudgets = async () => {
@@ -29,102 +31,86 @@ export const BudgetSection: React.FC = () => {
     if (!error && data) setBudgets(data)
   }
 
-  const handleAmountChange = async (id: string, amount: number) => {
-    const { error } = await supabase
-      .from('budgets')
-      .update({ amount })
-      .eq('id', id)
-
-    if (!error) {
-      setBudgets((prev) =>
-        prev.map((b) => (b.id === id ? { ...b, amount } : b))
-      )
-    }
-  }
-
-  const handleAddBudget = async () => {
-    if (!newCategory || !newAmount || isNaN(Number(newAmount))) return
-
-    const { data, error } = await supabase
-      .from('budgets')
-      .insert([
-        {
-          user_id: user?.id,
-          category: newCategory,
-          amount: Number(newAmount),
-        },
-      ])
-      .select()
+  const handleAdd = async () => {
+    if (!newCategory || !newAmount || !user?.id) return
+    const { data, error } = await supabase.from('budgets').insert({
+      user_id: user.id,
+      category: newCategory,
+      amount: parseFloat(newAmount)
+    }).select()
 
     if (!error && data) {
-      setBudgets((prev) => [...prev, data[0]])
+      setBudgets([...budgets, data[0]])
       setNewCategory('')
       setNewAmount('')
     }
   }
 
-  const getIcon = (category: string) => {
-    switch (category.toLowerCase()) {
-      case 'food':
-        return <Wallet className="w-6 h-6 text-green-600" />
-      case 'transport':
-        return <Calendar className="w-6 h-6 text-blue-600" />
-      case 'savings':
-        return <BarChart2 className="w-6 h-6 text-purple-600" />
-      default:
-        return <Wallet className="w-6 h-6 text-gray-600" />
-    }
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from('budgets').delete().eq('id', id)
+    if (!error) setBudgets(budgets.filter(b => b.id !== id))
   }
+
+  const iconMap = [Wallet, Calendar, BarChart2]
 
   return (
     <div className="space-y-6 p-6">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">🧾 Budget Management</h2>
-        <p className="text-gray-600">Set your monthly and weekly spending targets by category to stay on track.</p>
+      <div className="mb-4">
+        <h2 className="text-3xl font-bold text-gray-900 mb-1">🧾 Budget Management</h2>
+        <p className="text-gray-600">Set monthly budgets by category.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {budgets.map((budget) => (
-          <div key={budget.id} className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <p className="text-sm font-medium text-gray-600 capitalize">{budget.category}</p>
-                <input
-                  type="number"
-                  value={budget.amount}
-                  onChange={(e) => handleAmountChange(budget.id, Number(e.target.value))}
-                  className="text-2xl font-bold text-green-600 bg-transparent outline-none w-32"
-                />
-              </div>
-              <div className="bg-gray-100 p-3 rounded-full">
-                {getIcon(budget.category)}
+        {budgets.map((budget, index) => {
+          const Icon = iconMap[index % iconMap.length]
+          return (
+            <div key={budget.id} className="bg-white rounded-2xl shadow p-6 border border-gray-100 relative hover:shadow-md transition">
+              <button
+                onClick={() => handleDelete(budget.id)}
+                className="absolute top-3 right-3 text-red-500 hover:text-red-700"
+              >
+                <Trash2 size={16} />
+              </button>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">{budget.category}</p>
+                  <p className="text-2xl font-bold text-green-600">Ksh {budget.amount.toLocaleString()}</p>
+                </div>
+                <div className="bg-green-100 p-3 rounded-full">
+                  <Icon className="w-6 h-6 text-green-600" />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
-      <div className="mt-10 bg-white p-6 rounded-xl shadow-sm border border-gray-200 max-w-md space-y-4">
-        <h3 className="text-lg font-semibold text-gray-800">Add New Budget Category</h3>
-        <input
-          type="text"
-          placeholder="e.g. Entertainment"
-          value={newCategory}
-          onChange={(e) => setNewCategory(e.target.value)}
-          className="w-full px-4 py-2 border rounded-lg"
-        />
-        <input
-          type="number"
-          placeholder="Amount"
-          value={newAmount}
-          onChange={(e) => setNewAmount(e.target.value)}
-          className="w-full px-4 py-2 border rounded-lg"
-        />
+      <div className="mt-8 bg-white border border-green-100 rounded-2xl p-6 shadow flex flex-col md:flex-row md:items-end gap-4">
+        <div className="flex-1">
+          <label className="block text-sm text-gray-600 mb-1">New Category</label>
+          <input
+            type="text"
+            placeholder="e.g. Entertainment"
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="block text-sm text-gray-600 mb-1">Amount (Ksh)</label>
+          <input
+            type="number"
+            placeholder="e.g. 8000"
+            value={newAmount}
+            onChange={(e) => setNewAmount(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+        </div>
         <button
-          onClick={handleAddBudget}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          onClick={handleAdd}
+          className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium"
         >
-          <Plus className="w-4 h-4" /> Add Budget
+          <Plus size={18} /> Add Budget
         </button>
       </div>
     </div>

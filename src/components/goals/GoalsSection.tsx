@@ -1,135 +1,83 @@
+// File: src/components/budgets/BudgetSection.tsx
+
 import React, { useEffect, useState } from 'react'
-import { Plus, Target, TrendingUp, TrendingDown, Clock4 } from 'lucide-react'
+import { Wallet, Calendar, BarChart2, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
-import { format } from 'date-fns'
 
-interface Goal {
+interface BudgetItem {
   id: string
-  title: string
-  target_amount: number
-  current_amount: number
-  target_date: string
+  user_id: string
   category: string
-  status: 'active' | 'completed' | 'paused'
+  amount: number
 }
 
-export const GoalsSection: React.FC = () => {
+export const BudgetSection: React.FC = () => {
   const { user } = useAuth()
-  const [goals, setGoals] = useState<Goal[]>([])
-  const [newGoal, setNewGoal] = useState({
-    title: '',
-    target_amount: '',
-    current_amount: '',
-    target_date: '',
-    category: '',
-  })
+  const [budgets, setBudgets] = useState<BudgetItem[]>([])
+  const [newCategory, setNewCategory] = useState('')
+  const [newAmount, setNewAmount] = useState('')
 
   useEffect(() => {
-    if (user) {
-      fetchGoals()
-    }
+    if (user?.id) fetchBudgets()
   }, [user])
 
-  const fetchGoals = async () => {
+  const fetchBudgets = async () => {
     const { data, error } = await supabase
-      .from('financial_goals')
+      .from('budgets')
       .select('*')
       .eq('user_id', user?.id)
-      .order('target_date', { ascending: true })
+
+    if (!error && data) setBudgets(data)
+  }
+
+  const handleAdd = async () => {
+    if (!newCategory || !newAmount || !user?.id) return
+    const { data, error } = await supabase.from('budgets').insert({
+      user_id: user.id,
+      category: newCategory,
+      amount: parseFloat(newAmount)
+    }).select()
 
     if (!error && data) {
-      setGoals(data)
+      setBudgets([...budgets, data[0]])
+      setNewCategory('')
+      setNewAmount('')
     }
   }
 
-  const handleAddGoal = async () => {
-    const { title, target_amount, current_amount, target_date, category } = newGoal
-
-    if (!title || !target_amount || !target_date || !category) return
-
-    const { data, error } = await supabase
-      .from('financial_goals')
-      .insert([
-        {
-          user_id: user?.id,
-          title,
-          target_amount: Number(target_amount),
-          current_amount: Number(current_amount) || 0,
-          target_date,
-          category,
-          status: 'active',
-        },
-      ])
-      .select()
-
-    if (!error && data) {
-      setGoals((prev) => [...prev, data[0]])
-      setNewGoal({
-        title: '',
-        target_amount: '',
-        current_amount: '',
-        target_date: '',
-        category: '',
-      })
-    }
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from('budgets').delete().eq('id', id)
+    if (!error) setBudgets(budgets.filter(b => b.id !== id))
   }
 
-  const getStatusColor = (status: Goal['status']) => {
-    switch (status) {
-      case 'active': return 'text-green-600'
-      case 'paused': return 'text-yellow-600'
-      case 'completed': return 'text-blue-600'
-      default: return 'text-gray-600'
-    }
-  }
+  const iconMap = [Wallet, Calendar, BarChart2]
 
   return (
-    <div className="space-y-6">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">🎯 My Financial Goals</h2>
-        <p className="text-gray-600">Track your savings, investments, and progress over time.</p>
+    <div className="space-y-6 p-6">
+      <div className="mb-4">
+        <h2 className="text-3xl font-bold text-gray-900 mb-1">🧾 Budget Management</h2>
+        <p className="text-gray-600">Set monthly budgets by category.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {goals.map(goal => {
-          const progress = (goal.current_amount / goal.target_amount) * 100
-
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {budgets.map((budget, index) => {
+          const Icon = iconMap[index % iconMap.length]
           return (
-            <div key={goal.id} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <Target className="w-6 h-6 text-purple-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">{goal.title}</h3>
+            <div key={budget.id} className="bg-white rounded-xl shadow-sm p-5 border border-gray-200 relative">
+              <button
+                onClick={() => handleDelete(budget.id)}
+                className="absolute top-3 right-3 text-red-500 hover:text-red-700"
+              >
+                <Trash2 size={16} />
+              </button>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">{budget.category}</p>
+                  <p className="text-2xl font-bold text-green-600">Ksh {budget.amount.toLocaleString()}</p>
                 </div>
-                <span className={`text-sm font-medium ${getStatusColor(goal.status)}`}>
-                  {goal.status}
-                </span>
-              </div>
-
-              <p className="text-sm text-gray-600 mb-2">
-                Category: <span className="font-medium text-gray-800">{goal.category}</span>
-              </p>
-
-              <div className="w-full bg-gray-100 rounded-full h-3 mb-2">
-                <div
-                  className="bg-green-500 h-3 rounded-full transition-all duration-300"
-                  style={{ width: `${Math.min(progress, 100)}%` }}
-                ></div>
-              </div>
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>Ksh {goal.current_amount.toLocaleString()}</span>
-                <span>Ksh {goal.target_amount.toLocaleString()}</span>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Clock4 className="w-4 h-4" />
-                  <span>Target: {format(new Date(goal.target_date), 'MMM dd, yyyy')}</span>
-                </div>
-                <div className="flex gap-2">
-                  <TrendingUp className="w-4 h-4 text-green-500" />
-                  <TrendingDown className="w-4 h-4 text-red-500" />
+                <div className="bg-green-100 p-3 rounded-full">
+                  <Icon className="w-6 h-6 text-green-600" />
                 </div>
               </div>
             </div>
@@ -137,53 +85,26 @@ export const GoalsSection: React.FC = () => {
         })}
       </div>
 
-      <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm max-w-xl mx-auto mt-10 space-y-4">
-        <h3 className="text-lg font-semibold text-gray-800">➕ Add New Goal</h3>
-
+      <div className="mt-8 bg-gray-50 border border-dashed border-gray-300 rounded-lg p-4 flex flex-col md:flex-row md:items-center gap-3">
         <input
           type="text"
-          placeholder="Title (e.g., Buy a Laptop)"
-          value={newGoal.title}
-          onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
-          className="w-full px-4 py-2 border rounded-lg"
+          placeholder="New category"
+          value={newCategory}
+          onChange={(e) => setNewCategory(e.target.value)}
+          className="flex-1 px-3 py-2 border rounded-md"
         />
-
-        <input
-          type="text"
-          placeholder="Category (e.g., Education)"
-          value={newGoal.category}
-          onChange={(e) => setNewGoal({ ...newGoal, category: e.target.value })}
-          className="w-full px-4 py-2 border rounded-lg"
-        />
-
         <input
           type="number"
-          placeholder="Target Amount (e.g., 30000)"
-          value={newGoal.target_amount}
-          onChange={(e) => setNewGoal({ ...newGoal, target_amount: e.target.value })}
-          className="w-full px-4 py-2 border rounded-lg"
+          placeholder="Amount (Ksh)"
+          value={newAmount}
+          onChange={(e) => setNewAmount(e.target.value)}
+          className="flex-1 px-3 py-2 border rounded-md"
         />
-
-        <input
-          type="number"
-          placeholder="Current Amount (optional)"
-          value={newGoal.current_amount}
-          onChange={(e) => setNewGoal({ ...newGoal, current_amount: e.target.value })}
-          className="w-full px-4 py-2 border rounded-lg"
-        />
-
-        <input
-          type="date"
-          value={newGoal.target_date}
-          onChange={(e) => setNewGoal({ ...newGoal, target_date: e.target.value })}
-          className="w-full px-4 py-2 border rounded-lg"
-        />
-
         <button
-          onClick={handleAddGoal}
-          className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2"
+          onClick={handleAdd}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
         >
-          <Plus className="w-4 h-4" /> Add Goal
+          <Plus className="inline-block w-4 h-4 mr-1" /> Add Budget
         </button>
       </div>
     </div>
