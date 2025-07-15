@@ -1,8 +1,10 @@
+// File: src/components/settings/SettingsPanel.tsx
+
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 
-export const Settings: React.FC = () => {
+export const SettingsPanel: React.FC = () => {
   const { user } = useAuth()
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)

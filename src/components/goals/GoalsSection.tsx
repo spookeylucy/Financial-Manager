@@ -1,5 +1,7 @@
+// File: src/components/goals/GoalsSection.tsx
+
 import React, { useEffect, useState } from 'react'
-import { Plus, Target, Flag, TrendingUp, TrendingDown, Clock4 } from 'lucide-react'
+import { Plus, Target, TrendingUp, TrendingDown, Clock4 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { format } from 'date-fns'
@@ -14,7 +16,7 @@ interface Goal {
   status: 'active' | 'completed' | 'paused'
 }
 
-export const FinancialGoals: React.FC = () => {
+export const GoalsSection: React.FC = () => {
   const { user } = useAuth()
   const [goals, setGoals] = useState<Goal[]>([])
 
@@ -48,7 +50,7 @@ export const FinancialGoals: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">My Financial Goals</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">🎯 My Financial Goals</h2>
         <p className="text-gray-600">Track your savings, investments, and progress over time.</p>
       </div>
 
@@ -63,10 +65,14 @@ export const FinancialGoals: React.FC = () => {
                   <Target className="w-6 h-6 text-purple-600" />
                   <h3 className="text-lg font-semibold text-gray-900">{goal.title}</h3>
                 </div>
-                <span className={`text-sm font-medium ${getStatusColor(goal.status)}`}>{goal.status}</span>
+                <span className={`text-sm font-medium ${getStatusColor(goal.status)}`}>
+                  {goal.status}
+                </span>
               </div>
 
-              <p className="text-sm text-gray-600 mb-2">Category: <span className="font-medium text-gray-800">{goal.category}</span></p>
+              <p className="text-sm text-gray-600 mb-2">
+                Category: <span className="font-medium text-gray-800">{goal.category}</span>
+              </p>
 
               <div className="w-full bg-gray-100 rounded-full h-3 mb-2">
                 <div
