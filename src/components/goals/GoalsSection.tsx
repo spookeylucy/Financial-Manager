@@ -1,5 +1,3 @@
-// File: src/components/goals/GoalsSection.tsx
-
 import React, { useEffect, useState } from 'react'
 import { Plus, Target, TrendingUp, TrendingDown, Clock4 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
@@ -19,6 +17,13 @@ interface Goal {
 export const GoalsSection: React.FC = () => {
   const { user } = useAuth()
   const [goals, setGoals] = useState<Goal[]>([])
+  const [newGoal, setNewGoal] = useState({
+    title: '',
+    target_amount: '',
+    current_amount: '',
+    target_date: '',
+    category: '',
+  })
 
   useEffect(() => {
     if (user) {
@@ -35,6 +40,38 @@ export const GoalsSection: React.FC = () => {
 
     if (!error && data) {
       setGoals(data)
+    }
+  }
+
+  const handleAddGoal = async () => {
+    const { title, target_amount, current_amount, target_date, category } = newGoal
+
+    if (!title || !target_amount || !target_date || !category) return
+
+    const { data, error } = await supabase
+      .from('financial_goals')
+      .insert([
+        {
+          user_id: user?.id,
+          title,
+          target_amount: Number(target_amount),
+          current_amount: Number(current_amount) || 0,
+          target_date,
+          category,
+          status: 'active',
+        },
+      ])
+      .select()
+
+    if (!error && data) {
+      setGoals((prev) => [...prev, data[0]])
+      setNewGoal({
+        title: '',
+        target_amount: '',
+        current_amount: '',
+        target_date: '',
+        category: '',
+      })
     }
   }
 
@@ -100,14 +137,55 @@ export const GoalsSection: React.FC = () => {
         })}
       </div>
 
-      {goals.length === 0 && (
-        <div className="text-center py-10">
-          <p className="text-gray-600">No financial goals added yet.</p>
-          <button className="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-            <Plus className="inline-block w-4 h-4 mr-1" /> Add Goal
-          </button>
-        </div>
-      )}
+      <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm max-w-xl mx-auto mt-10 space-y-4">
+        <h3 className="text-lg font-semibold text-gray-800">➕ Add New Goal</h3>
+
+        <input
+          type="text"
+          placeholder="Title (e.g., Buy a Laptop)"
+          value={newGoal.title}
+          onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
+          className="w-full px-4 py-2 border rounded-lg"
+        />
+
+        <input
+          type="text"
+          placeholder="Category (e.g., Education)"
+          value={newGoal.category}
+          onChange={(e) => setNewGoal({ ...newGoal, category: e.target.value })}
+          className="w-full px-4 py-2 border rounded-lg"
+        />
+
+        <input
+          type="number"
+          placeholder="Target Amount (e.g., 30000)"
+          value={newGoal.target_amount}
+          onChange={(e) => setNewGoal({ ...newGoal, target_amount: e.target.value })}
+          className="w-full px-4 py-2 border rounded-lg"
+        />
+
+        <input
+          type="number"
+          placeholder="Current Amount (optional)"
+          value={newGoal.current_amount}
+          onChange={(e) => setNewGoal({ ...newGoal, current_amount: e.target.value })}
+          className="w-full px-4 py-2 border rounded-lg"
+        />
+
+        <input
+          type="date"
+          value={newGoal.target_date}
+          onChange={(e) => setNewGoal({ ...newGoal, target_date: e.target.value })}
+          className="w-full px-4 py-2 border rounded-lg"
+        />
+
+        <button
+          onClick={handleAddGoal}
+          className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" /> Add Goal
+        </button>
+      </div>
     </div>
   )
 }
