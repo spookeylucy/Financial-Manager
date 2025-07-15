@@ -53,3 +53,5 @@ const Budgets: React.FC = () => {
 }
 
 export default Budgets
+
+// File renamed to match PascalCase naming: BudgetSection
