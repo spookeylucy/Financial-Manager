@@ -117,7 +117,6 @@
 //   )
 // }
 
-// ✅ START OF FILE
 import React, { useEffect, useState } from 'react'
 import {
   Wallet, Calendar, BarChart2, Plus, Trash2, TrendingUp, Target,
@@ -170,7 +169,9 @@ export const BudgetSection: React.FC = () => {
     if (!newCategory.trim() || !newAmount || !user?.id) return
 
     setIsAddingBudget(true)
-    const currentMonth = new Date().toISOString().slice(0, 7)
+
+    const now = new Date()
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
     try {
       const { data, error } = await supabase.from('budgets').insert({
@@ -244,7 +245,6 @@ export const BudgetSection: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-red-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg border border-green-100">
             <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full">
@@ -259,7 +259,6 @@ export const BudgetSection: React.FC = () => {
           </p>
         </div>
 
-        {/* Total Summary Card */}
         {budgets.length > 0 && (
           <div className="bg-gradient-to-r from-green-600 to-emerald-700 rounded-3xl p-6 md:p-8 text-white shadow-2xl">
             <div className="flex items-center justify-between">
@@ -275,7 +274,6 @@ export const BudgetSection: React.FC = () => {
           </div>
         )}
 
-        {/* Budget Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(3)].map((_, i) => (
@@ -333,7 +331,6 @@ export const BudgetSection: React.FC = () => {
           </div>
         )}
 
-        {/* Add Budget Form */}
         <div className="bg-white/80 backdrop-blur-sm border border-green-100 rounded-3xl p-6 md:p-8 shadow-xl">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full">
@@ -387,6 +384,3 @@ export const BudgetSection: React.FC = () => {
     </div>
   )
 }
-// ✅ END OF FILE
-
-
