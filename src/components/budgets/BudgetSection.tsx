@@ -156,19 +156,25 @@ export const BudgetSection: React.FC = () => {
 
   const handleAdd = async () => {
     if (!newCategory.trim() || !newAmount || !user?.id) return
-    
+
     setIsAddingBudget(true)
+
     const { data, error } = await supabase.from('budgets').insert({
       user_id: user.id,
       category: newCategory.trim(),
       amount: parseFloat(newAmount)
     }).select()
 
+    if (error) {
+      console.error('Error inserting budget:', error)
+    }
+
     if (!error && data) {
       setBudgets([data[0], ...budgets])
       setNewCategory('')
       setNewAmount('')
     }
+
     setIsAddingBudget(false)
   }
 
@@ -201,14 +207,14 @@ export const BudgetSection: React.FC = () => {
 
   const getCardGradient = (index: number) => {
     const gradients = [
-      'from-emerald-500 to-green-600', // Kenyan green
-      'from-red-500 to-red-600', // Kenyan red  
-      'from-amber-500 to-orange-600', // Kenyan gold/orange
-      'from-slate-700 to-gray-800', // Kenyan black
-      'from-green-600 to-emerald-700', // Deep green
-      'from-red-600 to-rose-700', // Deep red
-      'from-orange-500 to-amber-600', // Warm orange
-      'from-emerald-600 to-teal-700', // Teal green
+      'from-emerald-500 to-green-600',
+      'from-red-500 to-red-600',
+      'from-amber-500 to-orange-600',
+      'from-slate-700 to-gray-800',
+      'from-green-600 to-emerald-700',
+      'from-red-600 to-rose-700',
+      'from-orange-500 to-amber-600',
+      'from-emerald-600 to-teal-700',
     ]
     return gradients[index % gradients.length]
   }
@@ -218,7 +224,6 @@ export const BudgetSection: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-red-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header Section */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg border border-green-100">
             <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full">
@@ -233,7 +238,6 @@ export const BudgetSection: React.FC = () => {
           </p>
         </div>
 
-        {/* Summary Card */}
         {budgets.length > 0 && (
           <div className="bg-gradient-to-r from-green-600 to-emerald-700 rounded-3xl p-6 md:p-8 text-white shadow-2xl">
             <div className="flex items-center justify-between">
@@ -249,7 +253,6 @@ export const BudgetSection: React.FC = () => {
           </div>
         )}
 
-        {/* Budget Cards Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(3)].map((_, i) => (
@@ -264,7 +267,7 @@ export const BudgetSection: React.FC = () => {
             {budgets.map((budget, index) => {
               const Icon = getCategoryIcon(budget.category)
               const gradient = getCardGradient(index)
-              
+
               return (
                 <div key={budget.id} className="group relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-white/50">
                   <button
@@ -273,7 +276,7 @@ export const BudgetSection: React.FC = () => {
                   >
                     <Trash2 size={14} />
                   </button>
-                  
+
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-500 mb-1">{budget.category}</p>
@@ -285,9 +288,9 @@ export const BudgetSection: React.FC = () => {
                       <Icon className="w-6 h-6 text-white" />
                     </div>
                   </div>
-                  
+
                   <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className={`h-full bg-gradient-to-r ${gradient} rounded-full transition-all duration-500`}
                       style={{ width: '60%' }}
                     />
@@ -307,7 +310,6 @@ export const BudgetSection: React.FC = () => {
           </div>
         )}
 
-        {/* Add New Budget Form */}
         <div className="bg-white/80 backdrop-blur-sm border border-green-100 rounded-3xl p-6 md:p-8 shadow-xl">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full">
@@ -315,7 +317,7 @@ export const BudgetSection: React.FC = () => {
             </div>
             <h3 className="text-xl font-semibold text-gray-900">Add New Budget</h3>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -330,7 +332,7 @@ export const BudgetSection: React.FC = () => {
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white/50"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Monthly Budget (Ksh)
@@ -345,7 +347,7 @@ export const BudgetSection: React.FC = () => {
               />
             </div>
           </div>
-          
+
           <div className="mt-6 flex justify-end">
             <button
               onClick={handleAdd}
@@ -365,3 +367,5 @@ export const BudgetSection: React.FC = () => {
     </div>
   )
 }
+
+
