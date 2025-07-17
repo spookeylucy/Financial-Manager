@@ -118,7 +118,11 @@
 // }
 
 import React, { useEffect, useState } from 'react'
-import { Wallet, Calendar, BarChart2, Plus, Trash2, TrendingUp, Target, DollarSign, ShoppingCart, Home, Car, Heart, Coffee, Gamepad2, BookOpen, Briefcase, Utensils } from 'lucide-react'
+import {
+  Wallet, Calendar, BarChart2, Plus, Trash2, TrendingUp, Target,
+  DollarSign, ShoppingCart, Home, Car, Heart, Coffee, Gamepad2,
+  BookOpen, Briefcase, Utensils
+} from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -127,6 +131,7 @@ interface BudgetItem {
   user_id: string
   category: string
   amount: number
+  period?: string
   created_at?: string
 }
 
@@ -159,10 +164,14 @@ export const BudgetSection: React.FC = () => {
 
     setIsAddingBudget(true)
 
+    // 👇 Add period value as YYYY-MM (required by DB)
+    const currentMonth = new Date().toISOString().slice(0, 7) // "2025-07"
+
     const { data, error } = await supabase.from('budgets').insert({
       user_id: user.id,
       category: newCategory.trim(),
-      amount: parseFloat(newAmount)
+      amount: parseFloat(newAmount),
+      period: currentMonth
     }).select()
 
     if (error) {
