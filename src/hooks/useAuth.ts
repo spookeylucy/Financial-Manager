@@ -61,7 +61,6 @@
 //     signOut,
 //   }
 // }
-
 import { useState, useEffect } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
@@ -82,7 +81,7 @@ export const useAuth = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         setUser(session?.user ?? null)
         setLoading(false)
       }
@@ -112,13 +111,13 @@ export const useAuth = () => {
 
     const user = data?.user
 
-    // 👇 Insert into profiles table if sign-up is successful
+    // Insert into profiles table after successful sign-up
     if (user && !error) {
       const { error: profileError } = await supabase.from('profiles').insert({
         id: user.id,
         email,
         full_name: fullName,
-        created_at: new Date(),
+        created_at: new Date().toISOString(),
       })
 
       if (profileError) {
