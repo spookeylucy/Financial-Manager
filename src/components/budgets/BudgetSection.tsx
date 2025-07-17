@@ -117,6 +117,7 @@
 //   )
 // }
 
+// ✅ START OF FILE
 import React, { useEffect, useState } from 'react'
 import {
   Wallet, Calendar, BarChart2, Plus, Trash2, TrendingUp, Target,
@@ -149,47 +150,57 @@ export const BudgetSection: React.FC = () => {
 
   const fetchBudgets = async () => {
     setIsLoading(true)
-    const { data, error } = await supabase
-      .from('budgets')
-      .select('*')
-      .eq('user_id', user?.id)
-      .order('created_at', { ascending: false })
+    try {
+      const { data, error } = await supabase
+        .from('budgets')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
 
-    if (!error && data) setBudgets(data)
-    setIsLoading(false)
+      if (error) throw error
+      if (data) setBudgets(data)
+    } catch (err) {
+      console.error('Error fetching budgets:', err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleAdd = async () => {
     if (!newCategory.trim() || !newAmount || !user?.id) return
 
     setIsAddingBudget(true)
+    const currentMonth = new Date().toISOString().slice(0, 7)
 
-    // 👇 Add period value as YYYY-MM (required by DB)
-    const currentMonth = new Date().toISOString().slice(0, 7) // "2025-07"
+    try {
+      const { data, error } = await supabase.from('budgets').insert({
+        user_id: user.id,
+        category: newCategory.trim(),
+        amount: parseFloat(newAmount),
+        period: currentMonth
+      }).select()
 
-    const { data, error } = await supabase.from('budgets').insert({
-      user_id: user.id,
-      category: newCategory.trim(),
-      amount: parseFloat(newAmount),
-      period: currentMonth
-    }).select()
-
-    if (error) {
-      console.error('Error inserting budget:', error)
+      if (error) throw error
+      if (data) {
+        setBudgets([data[0], ...budgets])
+        setNewCategory('')
+        setNewAmount('')
+      }
+    } catch (err) {
+      console.error('Error inserting budget:', err)
+    } finally {
+      setIsAddingBudget(false)
     }
-
-    if (!error && data) {
-      setBudgets([data[0], ...budgets])
-      setNewCategory('')
-      setNewAmount('')
-    }
-
-    setIsAddingBudget(false)
   }
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from('budgets').delete().eq('id', id)
-    if (!error) setBudgets(budgets.filter(b => b.id !== id))
+    try {
+      const { error } = await supabase.from('budgets').delete().eq('id', id)
+      if (error) throw error
+      setBudgets(budgets.filter(b => b.id !== id))
+    } catch (err) {
+      console.error('Error deleting budget:', err)
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -233,6 +244,7 @@ export const BudgetSection: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-red-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg border border-green-100">
             <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full">
@@ -247,6 +259,7 @@ export const BudgetSection: React.FC = () => {
           </p>
         </div>
 
+        {/* Total Summary Card */}
         {budgets.length > 0 && (
           <div className="bg-gradient-to-r from-green-600 to-emerald-700 rounded-3xl p-6 md:p-8 text-white shadow-2xl">
             <div className="flex items-center justify-between">
@@ -262,6 +275,7 @@ export const BudgetSection: React.FC = () => {
           </div>
         )}
 
+        {/* Budget Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(3)].map((_, i) => (
@@ -319,6 +333,7 @@ export const BudgetSection: React.FC = () => {
           </div>
         )}
 
+        {/* Add Budget Form */}
         <div className="bg-white/80 backdrop-blur-sm border border-green-100 rounded-3xl p-6 md:p-8 shadow-xl">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full">
@@ -329,30 +344,26 @@ export const BudgetSection: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category Name
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Category Name</label>
               <input
                 type="text"
                 placeholder="e.g. Transportation, Food, Entertainment"
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white/50"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Monthly Budget (Ksh)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Monthly Budget (Ksh)</label>
               <input
                 type="number"
                 placeholder="e.g. 15000"
                 value={newAmount}
                 onChange={(e) => setNewAmount(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white/50"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -376,5 +387,6 @@ export const BudgetSection: React.FC = () => {
     </div>
   )
 }
+// ✅ END OF FILE
 
 
